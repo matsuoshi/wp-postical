@@ -2,8 +2,8 @@
 
 /**
  * Plugin Name: postical
- * Version: 0.9
- * Description: export the posts schedules as iCal format.
+ * Version: 0.2
+ * Description: export the posts schedules as iCal format. access to <strong>http://YOUR-WP-ADDRESS/postical/</strong>
  * Author: h.matsuo
  * Author URI: http://github.com/matsuoshi
  * Plugin URI: http://github.com/matsuoshi/postical
