@@ -14,7 +14,7 @@ Postical; export the posts schedules as iCal format.
 export the posts schedules as iCal format.
 
 iCal URL is:
-    http://YOUR-WP-ADDRESS/postical/
+    http://YOUR-WP-ADDRESS/postical.ics
 
 GitHub: <https://github.com/matsuoshi/postical>
 
@@ -22,4 +22,4 @@ GitHub: <https://github.com/matsuoshi/postical>
 
 1. Upload or Install plugin.
 2. Activate the plugin through the Plugins menu.
-3. Access to http://YOUR-WP-ADDRESS/postical/ , iCal format schedules is output.
+3. Access to http://YOUR-WP-ADDRESS/postical.ics , get iCal format schedules.

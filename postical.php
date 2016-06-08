@@ -2,18 +2,21 @@
 
 /**
  * Plugin Name: postical
- * Version: 0.2
- * Description: export the posts schedules as iCal format. access to <strong>http://YOUR-WP-ADDRESS/postical/</strong>
+ * Version: 0.3
+ * Description: export the posts schedules as iCal format. access to <strong>http://YOUR-WP-ADDRESS/postical.ics</strong>
  * Author: h.matsuo
  * Author URI: http://github.com/matsuoshi
  * Plugin URI: http://github.com/matsuoshi/postical
  * Text Domain: postical
- * Domain Path: /languages
  * @package Postical
  */
 
 class Postical
 {
+	private $_ical_name = 'postical.ics';
+	private $_option_name = 'postical_options';
+
+
 	/**
 	 * Postical constructor.
 	 */
@@ -21,9 +24,135 @@ class Postical
 	{
 		register_activation_hook(__FILE__, array($this, 'activate'));
 		register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+		register_uninstall_hook(__FILE__, array($this, 'uninstall'));
+
 		add_action('init', array($this, 'init'));
 		add_action('delete_option', array($this, 'delete_option'), 10, 1);
 	}
+
+
+	/**
+	 * init plugin
+	 */
+	public function init()
+	{
+		add_rewrite_endpoint($this->_ical_name, EP_ROOT);
+		add_action('template_redirect', array($this, 'index'));
+	}
+
+
+	/**
+	 * postical main
+	 */
+	public function index()
+	{
+		global $wp_query;
+
+		if ($wp_query->query['pagename'] != $this->_ical_name) {
+			$wp_query->set_404();
+			status_header(404);
+			return;
+		}
+
+		$args = array(
+			'post_status' => array('publish'),
+			'numberposts' => 50,
+		);
+		if ($_GET['future'] === 1) {
+			// todo: setting page
+			$args['post_status'][] = 'future';
+		}
+
+		$posts = $this->get_posts($args);
+
+		$output = $this->create_ical($posts);
+
+		$this->output_ical($output);
+
+		exit;
+	}
+
+
+	/**
+	 * get posts
+	 * @param $args
+	 * @return mixed
+	 */
+	private function get_posts($args)
+	{
+		return get_posts($args + array(
+			'orderby' => 'post_date',
+			'order' => 'DESC',
+		));
+	}
+
+
+	/**
+	 * create iCal format data
+	 * @param $data
+	 * @return string
+	 */
+	private function create_ical($data)
+	{
+		// get base url
+		$parsed_url = parse_url(get_home_url());
+		$base_url = $parsed_url['host'];
+		if (!empty($parsed_url['path'])) {
+			$base_url .= $parsed_url['path'];
+		}
+
+		// header
+		$blog_name = get_bloginfo('name');
+		$output = <<< _HEREDOC_
+BEGIN:VCALENDAR
+PRODID:{$blog_name}
+VERSION:2.0
+
+_HEREDOC_;
+
+		// posts
+		global $post;
+
+		foreach ($data as $post) {
+			setup_postdata($post);
+
+			$start_time = date_i18n('Ymd\THis\Z', strtotime($post->post_date_gmt));
+			$title = get_the_title();
+			$description = get_the_permalink() . '\nby ' . get_the_author() . '\n' . get_the_excerpt();
+			$uid = esc_html("{$post->ID}@{$base_url}");
+
+			$output .= <<< _HEREDOC_
+BEGIN:VEVENT
+DTSTART:{$start_time}
+DURATION:PT1H
+SUMMARY:{$title}
+DESCRIPTION:{$description}
+UID:{$uid}
+END:VEVENT
+
+_HEREDOC_;
+		}
+
+		// footer
+		$output .= <<< _HEREDOC_
+END:VCALENDAR
+
+_HEREDOC_;
+
+		return $output;
+	}
+
+
+	/**
+	 * output ical
+	 * @param $output
+	 */
+	private function output_ical($output)
+	{
+		// todo: header()
+		echo $output;
+	}
+
 
 	/**
 	 * activate plugin
@@ -31,7 +160,7 @@ class Postical
 	public function activate()
 	{
 		update_option('postical_activated', true);
-		add_rewrite_endpoint('postical', EP_ROOT);
+		add_rewrite_endpoint($this->_ical_name, EP_ROOT);
 		flush_rewrite_rules();
 	}
 
@@ -45,82 +174,22 @@ class Postical
 	}
 
 	/**
+	 * uninstall plugin
+	 */
+	public function my_uninstall_hook()
+	{
+		delete_option($this->_option_name);
+	}
+
+	/**
 	 * call flush_rewrite_rules() by other module
 	 * @param $option
 	 */
 	function delete_option($option)
 	{
 		if ($option === 'rewrite_rules' && get_option('postical_activated')) {
-			add_rewrite_endpoint('postical', EP_ROOT);
+			add_rewrite_endpoint($this->_ical_name, EP_ROOT);
 		}
-	}
-
-	/**
-	 * init plugin
-	 */
-	public function init()
-	{
-		add_rewrite_endpoint('postical', EP_ROOT);
-		add_action('template_redirect', array($this, 'index'));
-	}
-
-	/**
-	 * postical main
-	 */
-	public function index()
-	{
-		global $wp_query;
-
-		if (! isset($wp_query->query['postical'])) {
-			$wp_query->set_404();
-			status_header(404);
-			return;
-		}
-
-		$post_status = array('publish');
-		if ($wp_query->query['postical'] === 'future') {
-			$post_status[] = 'future';
-		}
-
-		$posts = get_posts(array(
-			'post_status' => $post_status,
-			'orderby' => 'post_date',
-			'order' => 'DESC',
-			'numberposts' => 50,
-		));
-
-		$this->output($posts);
-
-		exit;
-	}
-
-	/**
-	 * output iCal data
-	 * @param $posts
-	 */
-	private function output($posts)
-	{
-		$parsed_url = parse_url(get_home_url());
-		$base_url = $parsed_url['host'];
-		if (! empty($parsed_url['path'])) {
-			$base_url .= $parsed_url['path'];
-		}
-
-		?>
-BEGIN:VCALENDAR
-PRODID:<?php echo get_bloginfo('name') . "\n"; ?>
-VERSION:2.0
-<?php foreach ($posts as $post) : setup_postdata($post); ?>
-BEGIN:VEVENT
-DTSTART:<?php echo date_i18n('Ymd\THi00\Z', strtotime($post->post_date_gmt)) . "\n" ?>
-DURATION:PT1H
-SUMMARY:<?php echo '[' . get_the_author() . '] ' . get_the_title() . "\n" ?>
-DESCRIPTION:<?php echo get_the_permalink() . ' \n' . get_the_excerpt() . "\n" ?>
-UID:<?php echo esc_html("{$post->ID}@{$base_url}") . "\n"; ?>
-END:VEVENT
-<?php endforeach; ?>
-END:VCALENDAR
-		<?php
 	}
 }
 
