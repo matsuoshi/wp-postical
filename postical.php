@@ -2,8 +2,8 @@
 
 /**
  * Plugin Name: postical
- * Version: 0.3
- * Description: export the posts schedules as iCal format. access to <strong>http://YOUR-WP-ADDRESS/postical.ics</strong>
+ * Version: 0.4
+ * Description: export the posts schedules as iCal format. access to <strong>http://YOUR-WP-ADDRESS/postical</strong>
  * Author: h.matsuo
  * Author URI: http://github.com/matsuoshi
  * Plugin URI: http://github.com/matsuoshi/postical
@@ -13,8 +13,7 @@
 
 class Postical
 {
-	private $_ical_name = 'postical.ics';
-	private $_option_name = 'postical_options';
+	private $_ical_name = 'postical';
 
 
 	/**
@@ -24,7 +23,6 @@ class Postical
 	{
 		register_activation_hook(__FILE__, array($this, 'activate'));
 		register_deactivation_hook(__FILE__, array($this, 'deactivate'));
-		register_uninstall_hook(__FILE__, array($this, 'uninstall'));
 
 		add_action('init', array($this, 'init'));
 		add_action('delete_option', array($this, 'delete_option'), 10, 1);
@@ -48,7 +46,11 @@ class Postical
 	{
 		global $wp_query;
 
-		if ($wp_query->query['pagename'] != $this->_ical_name) {
+		if (! isset($wp_query->query[$this->_ical_name])) {
+			return;
+		}
+
+		if (! empty($wp_query->query[$this->_ical_name])) {
 			$wp_query->set_404();
 			status_header(404);
 			return;
@@ -58,7 +60,7 @@ class Postical
 			'post_status' => array('publish'),
 			'numberposts' => 50,
 		);
-		if ($_GET['future'] === 1) {
+		if ($_GET['future'] === 'true') {
 			// todo: setting page
 			$args['post_status'][] = 'future';
 		}
@@ -149,7 +151,8 @@ _HEREDOC_;
 	 */
 	private function output_ical($output)
 	{
-		// todo: header()
+		header('Content-type: text/calendar; charset=utf-8');
+		header('Content-Disposition: attachment; filename=postical.ics');
 		echo $output;
 	}
 
@@ -174,18 +177,10 @@ _HEREDOC_;
 	}
 
 	/**
-	 * uninstall plugin
-	 */
-	public function my_uninstall_hook()
-	{
-		delete_option($this->_option_name);
-	}
-
-	/**
 	 * call flush_rewrite_rules() by other module
 	 * @param $option
 	 */
-	function delete_option($option)
+	public function delete_option($option)
 	{
 		if ($option === 'rewrite_rules' && get_option('postical_activated')) {
 			add_rewrite_endpoint($this->_ical_name, EP_ROOT);

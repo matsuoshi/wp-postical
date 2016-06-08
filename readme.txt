@@ -1,9 +1,9 @@
 === Postical ===
 Contributors: matsuoshi
 Tags: schedule, calendar, iCal
-Requires at least: 3.0.1
+Requires at least: 4.0
 Tested up to: 4.5
-Stable tag: 4.5
+Stable tag: 0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Postical; export the posts schedules as iCal format.
 export the posts schedules as iCal format.
 
 iCal URL is:
-    http://YOUR-WP-ADDRESS/postical.ics
+    http://YOUR-WP-ADDRESS/postical
 
 GitHub: <https://github.com/matsuoshi/postical>
 
@@ -22,4 +22,4 @@ GitHub: <https://github.com/matsuoshi/postical>
 
 1. Upload or Install plugin.
 2. Activate the plugin through the Plugins menu.
-3. Access to http://YOUR-WP-ADDRESS/postical.ics , get iCal format schedules.
+3. Access to http://YOUR-WP-ADDRESS/postical , get iCal format schedules.
