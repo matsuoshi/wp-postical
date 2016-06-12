@@ -9,11 +9,14 @@
  * Plugin URI: http://github.com/matsuoshi/postical
  * Text Domain: postical
  * @package Postical
+ *
+ * todo: urlencode(openssl_random_pseudo_bytes(16))
  */
 
 class Postical
 {
 	private $_ical_name = 'postical';
+	private $_options;
 
 
 	/**
@@ -26,6 +29,8 @@ class Postical
 
 		add_action('init', array($this, 'init'));
 		add_action('delete_option', array($this, 'delete_option'), 10, 1);
+		add_action('admin_menu', array($this, 'admin_menu'));
+		add_action('admin_init', array($this, 'admin_init'));
 	}
 
 
@@ -156,6 +161,65 @@ _HEREDOC_;
 		echo $output;
 	}
 
+
+	/**
+	 * add admin options page
+	 */
+	public function admin_menu()
+	{
+		add_options_page(
+			'postical',
+			'postical',
+			'manage_options',
+			'postical_setting',
+			array($this, 'setting')
+		);
+	}
+
+
+	public function admin_init()
+	{
+		register_setting('postical_options', 'postical_setting', array($this, 'sanitize'));
+		add_settings_section('postical_options_section', '', '', 'postical_options');
+		add_settings_field('future', 'enable future posts', array($this, 'future_callback'), 'postical_options', 'postical_options_section');
+	}
+
+
+	public function setting()
+	{
+		// 設定値を取得します。
+		$this->options = get_option('postical_options');
+		$main_url = get_home_url() . '/' . $this->_ical_name;
+		?>
+		<div class="wrap">
+			<h2>postical</h2>
+
+			<form method="post" action="options.php">
+				<?php
+				settings_fields('postical_options');
+				do_settings_sections('postical_options');
+				?>
+				<p>
+					your iCal URL is:
+					<strong>
+						<a href="<?php echo esc_attr($main_url) ?>"><?php echo esc_url($main_url) ?></a>
+					</strong>
+				</p>
+				<?php
+				submit_button();
+				?>
+			</form>
+		</div>
+	<?php
+	}
+
+	public function future_callback()
+	{
+		printf(
+			'<input type="text" id="id_number" name="my_option_name[id_number]" value="%s" />',
+			isset( $this->options['id_number'] ) ? esc_attr( $this->options['id_number']) : ''
+		);
+	}
 
 	/**
 	 * activate plugin
