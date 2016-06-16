@@ -3,7 +3,7 @@ Contributors: matsuoshi
 Tags: schedule, calendar, iCal, export, exporter
 Requires at least: 4.0
 Tested up to: 4.5
-Stable tag: 0.5
+Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,5 +24,11 @@ GitHub: <https://github.com/matsuoshi/postical>
 2. Access to http://YOUR-WP-ADDRESS/postical , get iCal format schedules of your posts.
 
 == Changelog ==
+= 1.0 =
+* add setting page
+* enable future posts schedules
+* (2016.6)
+
 = 0.5 =
-* 2016.6: first version.
+* first version.
+* (2016.6)
