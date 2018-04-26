@@ -2,7 +2,7 @@
 Contributors: matsuoshi
 Tags: schedule, calendar, iCal, export, exporter
 Requires at least: 4.0
-Tested up to: 4.7
+Tested up to: 4.9.5
 Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
